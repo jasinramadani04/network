@@ -32,20 +32,19 @@ def scan_ports(ip, ports):
         sock.close()
     return open_ports
 
-def get_connected_users(ip, ports):
+def get_connected_users(ip, port):
     users = []
-    for port in ports:
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(1)
-            sock.connect((ip, port))
-            sock.sendall(b'WHO')
-            response = sock.recv(1024)
-            users.extend(response.decode().split(','))
-            sock.close()
-        except:
-            pass
-    return list(set(users))
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        sock.connect((ip, port))
+        sock.sendall(b'USERS')
+        response = sock.recv(1024)
+        users.extend(response.decode().split(','))
+        sock.close()
+    except:
+        pass
+    return users
 
 def main():
     isp = get_internet_service_provider()
@@ -64,12 +63,14 @@ def main():
 
     if len(open_ports) > 0:
         print_stylish('Connected Users:')
-        users = get_connected_users(ip, open_ports)
-        if len(users) > 0:
-            for user in users:
-                print(user)
-        else:
-            print('No users connected to the server.')
+        for port in open_ports:
+            users = get_connected_users(ip, port)
+            if len(users) > 0:
+                print(f'Users connected to port {port}:')
+                for user in users:
+                    print(user)
+            else:
+                print(f'No users connected to port {port}.')
     else:
         print('No open ports found.')
 
